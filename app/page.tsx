@@ -373,7 +373,7 @@ function VisibilitySection({ department, riskLevel }: { department: string, risk
   const [copied, setCopied] = useState(false);
   const [liCopied, setLiCopied] = useState(false);
   const vis = generateVisibilityContent(department);
-  const draft = vis.postDrafts[mode];
+  const draft = (vis.postDrafts as any)[mode];
 
   const isHighRisk = riskLevel === "High" || riskLevel === "Elevated";
   const headline = isHighRisk ? "POST ON LINKEDIN BEFORE YOU NEED TO" : "BUILD YOUR LINKEDIN PRESENCE NOW";
