@@ -1,15 +1,14 @@
-"use client";
 import { useState, useEffect } from "react";
 
 // ─── DATA LAYER ───────────────────────────────────────────────────────────────
 
 const BIG_TECH = ["google","meta","amazon","microsoft","apple","netflix","twitter","x","salesforce","oracle","ibm","intel","snap","lyft","uber","airbnb","shopify","stripe","palantir","zoom","slack","dropbox","pinterest","reddit","linkedin"];
 
-function getCompanySignals(company) {
+function getCompanySignals(company: string) {
   const name = company.toLowerCase();
-  const isBigTech = BIG_TECH.some(t => name.includes(t));
-  const seed = name.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
-  const rng = (min, max, offset = 0) => min + ((seed + offset) % (max - min + 1));
+  const isBigTech = BIG_TECH.some((t: string) => name.includes(t));
+  const seed = name.split("").reduce((a: number, c: string) => a + c.charCodeAt(0), 0);
+  const rng = (min: number, max: number, offset: number = 0) => min + ((seed + offset) % (max - min + 1));
 
   const stockDir = isBigTech ? (rng(0,2,1) === 0 ? "down" : "flat") : ["up","down","flat"][rng(0,2,3)];
   const stockChange = stockDir === "down" ? -(rng(3,22,7)) : stockDir === "up" ? rng(1,18,5) : rng(-3,3,2);
@@ -32,7 +31,7 @@ function getCompanySignals(company) {
 const DEPT_SCORES = { "HR / Recruiting": 20, "Marketing": 10, "Sales": 5, "Engineering": -5, "Product": 0, "Operations": 5 };
 const SENIORITY_SCORES = { "Entry": 10, "Mid": 0, "Senior": -5, "Leadership": -10 };
 
-function calculateRisk(signals, department, seniority) {
+function calculateRisk(signals: ReturnType<typeof getCompanySignals>, department: string, seniority: string) {
   let score = 0;
   if (signals.stockTrend === "down") score += 15 + Math.abs(signals.stockChangePercent);
   if (signals.newsSentiment === "negative") score += 20;
@@ -65,7 +64,7 @@ const POST_ANGLES = {
   Operations: ["The process we killed that everyone thought was essential","What 'scalable' actually means when you're in it","The ops change with the highest ROI no one expected"]
 };
 
-function generateVisibilityContent(department) {
+function generateVisibilityContent(department: string) {
   const angles = POST_ANGLES[department] || POST_ANGLES["Engineering"];
   const angle = angles[Math.floor(Math.random() * angles.length)];
   return {
@@ -78,7 +77,7 @@ function generateVisibilityContent(department) {
   };
 }
 
-function buildDeepDive(signals, company, department) {
+function buildDeepDive(signals: ReturnType<typeof getCompanySignals>, company: string, department: string) {
   const items = [];
   if (signals.stockTrend === "down") {
     items.push({ icon: "📉", label: "Stock Pressure", summary: `Down ${Math.abs(signals.stockChangePercent)}% recently`, detail: `When stock drops this sharply, boards start asking hard questions about headcount costs. Expect earnings call language to shift toward "discipline" and "efficiency." That's when HR starts getting quiet emails.` });
@@ -300,7 +299,7 @@ function Clock() {
 const CARD_CLS = { Clear: "wc-clear", Cloudy: "wc-cloudy", "Storm Watch": "wc-storm", Severe: "wc-severe" };
 const WEATHER_ICON = { Clear: "☀", Cloudy: "⛅", "Storm Watch": "⛈", Severe: "⚡" };
 
-function WeatherCard({ risk, company, snark }) {
+function WeatherCard({ risk, company, snark }: { risk: ReturnType<typeof calculateRisk>, company: string, snark: string }) {
   const cls = CARD_CLS[risk.weather];
   const date = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }).toUpperCase();
   return (
@@ -331,7 +330,7 @@ function WeatherCard({ risk, company, snark }) {
   );
 }
 
-function DiveItem({ item }) {
+function DiveItem({ item }: { item: { icon: string, label: string, summary: string, detail: string } }) {
   const [open, setOpen] = useState(false);
   return (
     <div className={`dive-item${open ? " open" : ""}`}>
@@ -346,7 +345,7 @@ function DiveItem({ item }) {
   );
 }
 
-function TerminalSignals({ signals }) {
+function TerminalSignals({ signals }: { signals: ReturnType<typeof getCompanySignals> }) {
   const sc = signals.stockTrend === "up" ? "t-ok" : signals.stockTrend === "down" ? "t-b" : "t-w";
   const nc = signals.newsSentiment === "positive" ? "t-ok" : signals.newsSentiment === "negative" ? "t-b" : "t-w";
   const hc = signals.hiringTrend === "increasing" ? "t-ok" : signals.hiringTrend === "decreasing" ? "t-b" : "t-w";
@@ -366,7 +365,7 @@ function TerminalSignals({ signals }) {
   );
 }
 
-function VisibilitySection({ department, riskLevel }) {
+function VisibilitySection({ department, riskLevel }: { department: string, riskLevel: string }) {
   const [mode, setMode] = useState("safe");
   const [copied, setCopied] = useState(false);
   const [liCopied, setLiCopied] = useState(false);
