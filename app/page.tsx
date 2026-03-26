@@ -303,12 +303,12 @@ const CARD_CLS = { Clear: "wc-clear", Cloudy: "wc-cloudy", "Storm Watch": "wc-st
 const WEATHER_ICON = { Clear: "☀", Cloudy: "⛅", "Storm Watch": "⛈", Severe: "⚡" };
 
 function WeatherCard({ risk, company, snark }: { risk: ReturnType<typeof calculateRisk>, company: string, snark: string }) {
-  const cls = CARD_CLS[risk.weather];
+  const cls = (CARD_CLS as any)[risk.weather];
   const date = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }).toUpperCase();
   return (
     <div className={`wcard ${cls}`}>
       <div className="wtop">
-        <div className="wicon">{WEATHER_ICON[risk.weather]}</div>
+        <div className="wicon">{(WEATHER_ICON as any)[risk.weather]}</div>
         <div className="wtxt">
           <div className="w-dateline">⛅ layoffweather.net — {date}</div>
           <div className="w-condition">{risk.weather}</div>
@@ -483,7 +483,7 @@ export default function LayoffWeather() {
     clearInterval(iv);
     const signals = getCompanySignals(company);
     const risk = calculateRisk(signals, dept, seniority);
-    const snarkList = SNARK[risk.level];
+    const snarkList = (SNARK as any)[risk.level];
     const snark = snarkList[Math.floor(Math.random() * snarkList.length)];
     const deepDive = buildDeepDive(signals, company, dept);
     setResult({ signals, risk, snark, deepDive });
