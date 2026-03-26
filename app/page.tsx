@@ -43,8 +43,8 @@ function calculateRisk(signals: ReturnType<typeof getCompanySignals>, department
   if (signals.hiringFreezes) score += 10;
   if (signals.executiveChanges) score += 8;
   score += signals.layoffSeverity * 0.2;
-  score += DEPT_SCORES[department] || 0;
-  score += SENIORITY_SCORES[seniority] || 0;
+  score += (DEPT_SCORES as any)[department] || 0;
+  score += (SENIORITY_SCORES as any)[seniority] || 0;
   score = Math.min(100, Math.max(0, Math.round(score)));
   const level = score < 30 ? "Low" : score < 55 ? "Moderate" : score < 75 ? "Elevated" : "High";
   const weather = score < 30 ? "Clear" : score < 55 ? "Cloudy" : score < 75 ? "Storm Watch" : "Severe";
