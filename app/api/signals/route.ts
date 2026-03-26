@@ -7,13 +7,28 @@ export async function GET(req: NextRequest) {
   const ALPHA_KEY = process.env.ALPHA_VANTAGE_KEY || "";
   const NEWS_KEY = process.env.NEWS_API_KEY || "";
 
-  // ── STOCK DATA ──────────────────────────────────────────────────────────────
+  // TICKER LOOKUP
+  let ticker = company.toUpperCase();
+  try {
+    const searchRes = await fetch(
+      `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${encodeURIComponent(company)}&apikey=${ALPHA_KEY}`
+    );
+    const searchData = await searchRes.json();
+    const matches = searchData["bestMatches"] || [];
+    if (matches.length > 0) {
+      const usMatch = matches.find((m: any) => m["4. region"] === "United States");
+      ticker = usMatch ? usMatch["1. symbol"] : matches[0]["1. symbol"];
+    }
+  } catch (e) {
+    console.error("Ticker lookup failed", e);
+  }
+
+  // STOCK DATA
   let stockTrend: "up" | "down" | "flat" = "flat";
   let stockChangePercent = 0;
-
   try {
     const stockRes = await fetch(
-      `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(company)}&apikey=${ALPHA_KEY}`
+      `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(ticker)}&apikey=${ALPHA_KEY}`
     );
     const stockData = await stockRes.json();
     const quote = stockData["Global Quote"];
@@ -26,23 +41,13 @@ export async function GET(req: NextRequest) {
     console.error("Stock fetch failed", e);
   }
 
-  // ── NEWS + SENTIMENT ────────────────────────────────────────────────────────
+  // NEWS + SENTIMENT
   let newsSentiment: "positive" | "neutral" | "negative" = "neutral";
   let keywords: string[] = [];
   let recentLayoffs = false;
   let hiringTrend: "increasing" | "decreasing" | "flat" = "flat";
-
-  const RISK_KEYWORDS = [
-    "layoff", "layoffs", "laid off", "job cuts", "restructuring",
-    "efficiency", "cost cutting", "cost discipline", "workforce reduction",
-    "headcount", "right-sizing", "streamlining", "reorg", "reorganization",
-    "hiring freeze", "downsizing", "redundancies"
-  ];
-
-  const POSITIVE_KEYWORDS = [
-    "hiring", "growth", "expansion", "record revenue", "beat expectations",
-    "strong earnings", "new product", "acquisition", "partnership"
-  ];
+  const RISK_KEYWORDS = ["layoff","layoffs","laid off","job cuts","restructuring","efficiency","cost cutting","cost discipline","workforce reduction","headcount","right-sizing","streamlining","reorg","reorganization","hiring freeze","downsizing","redundancies"];
+  const POSITIVE_KEYWORDS = ["hiring","growth","expansion","record revenue","beat expectations","strong earnings","new product","acquisition","partnership"];
 
   try {
     const newsRes = await fetch(
@@ -50,63 +55,41 @@ export async function GET(req: NextRequest) {
     );
     const newsData = await newsRes.json();
     const articles = newsData.articles || [];
-
     let riskScore = 0;
     let positiveScore = 0;
     const foundKeywords = new Set<string>();
-
     for (const article of articles) {
       const text = `${article.title || ""} ${article.description || ""}`.toLowerCase();
-
       for (const kw of RISK_KEYWORDS) {
         if (text.includes(kw)) {
           riskScore++;
           foundKeywords.add(kw);
-          if (kw.includes("layoff") || kw.includes("laid off") || kw.includes("job cuts")) {
-            recentLayoffs = true;
-          }
-          if (kw.includes("hiring freeze")) {
-            hiringTrend = "decreasing";
-          }
+          if (kw.includes("layoff") || kw.includes("laid off") || kw.includes("job cuts")) recentLayoffs = true;
+          if (kw.includes("hiring freeze")) hiringTrend = "decreasing";
         }
       }
-
       for (const kw of POSITIVE_KEYWORDS) {
         if (text.includes(kw)) {
           positiveScore++;
-          if (kw === "hiring" && hiringTrend !== "decreasing") {
-            hiringTrend = "increasing";
-          }
+          if (kw === "hiring" && hiringTrend !== "decreasing") hiringTrend = "increasing";
         }
       }
     }
-
     keywords = Array.from(foundKeywords).slice(0, 5);
-
     if (riskScore >= 3) newsSentiment = "negative";
     else if (positiveScore >= 3 && riskScore === 0) newsSentiment = "positive";
     else newsSentiment = "neutral";
-
   } catch (e) {
     console.error("News fetch failed", e);
   }
 
-  // ── LAYOFF SEVERITY ─────────────────────────────────────────────────────────
-  const layoffSeverity = recentLayoffs
-    ? Math.min(80, 40 + keywords.length * 8)
-    : Math.min(30, keywords.length * 5);
+  const layoffSeverity = recentLayoffs ? Math.min(80, 40 + keywords.length * 8) : Math.min(30, keywords.length * 5);
 
   return NextResponse.json({
-    stockTrend,
-    stockChangePercent,
-    newsSentiment,
-    keywords,
-    hiringTrend,
-    recentLayoffs,
-    layoffSeverity,
+    stockTrend, stockChangePercent, ticker, newsSentiment, keywords,
+    hiringTrend, recentLayoffs, layoffSeverity,
     earningsKeywords: keywords[0] || "no major signals",
-    executiveChanges: false,
-    contractorCuts: false,
+    executiveChanges: false, contractorCuts: false,
     hiringFreezes: hiringTrend === "decreasing",
   });
 }
