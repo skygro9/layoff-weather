@@ -68,7 +68,7 @@ const POST_ANGLES = {
 };
 
 function generateVisibilityContent(department: string) {
-  const angles = POST_ANGLES[department] || POST_ANGLES["Engineering"];
+  const angles = (POST_ANGLES as any)[department] || POST_ANGLES["Engineering"];
   const angle = angles[Math.floor(Math.random() * angles.length)];
   return {
     angle,
