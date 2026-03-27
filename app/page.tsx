@@ -355,10 +355,10 @@ function TerminalSignals({ signals }: { signals: ReturnType<typeof getCompanySig
     <div className="terminal">
       <span className="line"><span className="t-p">$</span> <span className="t-d">run signal_scan --realtime</span></span>
       <span className="line"><span className="t-p">›</span> STOCK TODAY ................ <span className={sc}>{signals.stockTrend.toUpperCase()} {signals.stockChangePercent > 0 ? "+" : ""}{signals.stockChangePercent}%</span></span>
-      {signals.yearChangePercent !== undefined && signals.yearChangePercent !== 0 && (
+      {(signals as any).yearChangePercent !== undefined && (signals as any).yearChangePercent !== 0 && (
         <span className="line"><span className="t-p">›</span> STOCK (52-WEEK VS HIGH) .... <span className={signals.yearChangePercent < -30 ? "t-b" : signals.yearChangePercent < -10 ? "t-w" : "t-ok"}>{signals.yearChangePercent > 0 ? "+" : ""}{signals.yearChangePercent}% FROM 52W HIGH</span></span>
       )}
-      {signals.stockStory && signals.stockStory !== "flat" && (
+      {(signals as any).stockStory && (signals as any).stockStory !== "flat" && (
         <span className="line"><span className="t-p">›</span> STOCK TREND ................ <span className={["collapsing","depressed","declining"].includes(signals.stockStory) ? "t-b" : signals.stockStory === "mixed" ? "t-w" : "t-ok"}>{signals.stockStory.toUpperCase()}</span></span>
       )}
       <span className="line"><span className="t-p">›</span> NEWS SENTIMENT ............. <span className={nc}>{signals.newsSentiment.toUpperCase()}</span></span>
