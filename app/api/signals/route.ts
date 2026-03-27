@@ -97,7 +97,7 @@ export async function GET(req: NextRequest) {
     console.error("NewsAPI failed", e);
   }
 
-  const allKeywords = [...new Set([...secKeywords, ...newsKeywords])].slice(0, 5);
+  const allKeywords = Array.from(new Set([...secKeywords, ...newsKeywords])).slice(0, 5);
   if (recentLayoffs && newsSentiment === "neutral") newsSentiment = "negative";
   const layoffSeverity = recentLayoffs ? Math.min(85, 50 + allKeywords.length * 6) : Math.min(30, allKeywords.length * 5);
   if (stockTrend === "down" && newsSentiment === "negative" && hiringTrend === "flat") hiringTrend = "decreasing";
