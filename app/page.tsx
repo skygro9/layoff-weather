@@ -480,7 +480,12 @@ export default function LayoffWeather() {
     const iv = setInterval(() => { setLoadMsg(MSGS[i % MSGS.length]); i++; }, 420);
     await new Promise(r => setTimeout(r, 2300));
     clearInterval(iv);
-    const signals = getCompanySignals(company);
+    let signals;
+    try {
+      const res = await fetch('/api/signals?company=' + encodeURIComponent(company));
+      if (res.ok) { signals = await res.json(); }
+      else { signals = getCompanySignals(company); }
+    } catch (e) { signals = getCompanySignals(company); }
     const risk = calculateRisk(signals, dept, seniority);
     const snarkList = SNARK[risk.level];
     const snark = snarkList[Math.floor(Math.random() * snarkList.length)];
